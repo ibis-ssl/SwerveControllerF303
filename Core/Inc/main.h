@@ -69,6 +69,8 @@ void Error_Handler(void);
 #define MOTOR_A_Current_GPIO_Port GPIOA
 #define CurrentLimit_Pin GPIO_PIN_2
 #define CurrentLimit_GPIO_Port GPIOA
+#define PH_SENS_Pin GPIO_PIN_3
+#define PH_SENS_GPIO_Port GPIOA
 #define PH_DRV_0_Pin GPIO_PIN_5
 #define PH_DRV_0_GPIO_Port GPIOA
 #define PH_DRV_1_Pin GPIO_PIN_6

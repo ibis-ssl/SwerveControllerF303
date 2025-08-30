@@ -8,6 +8,7 @@
 #ifndef INC_PHOTO_CONTROL_H_
 #define INC_PHOTO_CONTROL_H_
 
-void PhotoControlInit(void);
+void photo_controller_init(void);
+void photo_controller_cycle(void);
 
 #endif /* INC_PHOTO_CONTROL_H_ */
