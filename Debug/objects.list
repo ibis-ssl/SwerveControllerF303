@@ -1,5 +1,6 @@
 "./Core/Src/adc.o"
 "./Core/Src/can.o"
+"./Core/Src/can_fifo.o"
 "./Core/Src/debug_print.o"
 "./Core/Src/dma.o"
 "./Core/Src/gpio.o"
