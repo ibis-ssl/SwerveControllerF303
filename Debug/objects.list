@@ -1,5 +1,7 @@
 "./Core/Src/adc.o"
 "./Core/Src/can.o"
+"./Core/Src/debug_print.o"
+"./Core/Src/dma.o"
 "./Core/Src/gpio.o"
 "./Core/Src/main.o"
 "./Core/Src/photo_control.o"
