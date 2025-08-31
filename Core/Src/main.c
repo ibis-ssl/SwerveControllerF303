@@ -119,9 +119,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    photo_controller_cycle();
     p("%5dmV %5dmA %5d\n", (int)(adc_raw[0] / 1.14), adc_raw[1], adc_raw[2]);
     HAL_Delay(100);
+    photo_controller_cycle();
   }
   /* USER CODE END 3 */
 }

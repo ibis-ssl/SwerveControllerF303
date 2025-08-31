@@ -33,9 +33,9 @@ static void set_gpio(uint8_t pin)
   switch (pin) {
     case 0:
       HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_RESET);
 
       HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_SET);
@@ -45,10 +45,10 @@ static void set_gpio(uint8_t pin)
     case 1:
       HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_RESET);
 
-      HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_SET);
@@ -57,10 +57,10 @@ static void set_gpio(uint8_t pin)
       HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_RESET);
 
-      HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_SET);
       break;
@@ -70,9 +70,9 @@ static void set_gpio(uint8_t pin)
       HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_RESET);
 
-      HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_SET);
       break;
     case 4:
@@ -82,36 +82,36 @@ static void set_gpio(uint8_t pin)
       HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_SET);
 
       HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_RESET);
       break;
     case 5:
-      HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_SET);
 
       HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_RESET);
       break;
     case 6:
-      HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_SET);
 
       HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_5_GPIO_Port, PH_DRV_5_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(PH_DRV_6_GPIO_Port, PH_DRV_6_Pin, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_7_GPIO_Port, PH_DRV_7_Pin, GPIO_PIN_RESET);
       break;
     case 7:
-      HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(PH_DRV_0_GPIO_Port, PH_DRV_0_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_1_GPIO_Port, PH_DRV_1_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(PH_DRV_2_GPIO_Port, PH_DRV_2_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(PH_DRV_3_GPIO_Port, PH_DRV_3_Pin, GPIO_PIN_SET);
 
       HAL_GPIO_WritePin(PH_DRV_4_GPIO_Port, PH_DRV_4_Pin, GPIO_PIN_SET);
