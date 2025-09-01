@@ -53,6 +53,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+#define HARF_OF_ENC_CNT_MAX (32768)
 
 /* USER CODE END EFP */
 
