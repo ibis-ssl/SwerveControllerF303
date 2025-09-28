@@ -38,20 +38,18 @@ void motor_drive_set(float value)
     return;
   }
 
-  float mag = value > 0.0f ? value : -value;
-  /* Map magnitude to [0..period], rounding to nearest */
-  uint32_t d = (uint32_t)(mag * (float)period + 0.5f);
-  if (d > period) d = period; /* guard */
+  int cnt = period * (1.0 - fabs(value));
 
-  uint32_t d_comp = period - d; /* complementary */
-
+  // H/H : Blake
+  // L/L : Free/Sleep
+  // H/L,L/H : Drive
   if (value > 0.0f) {
     /* Forward: CH2=D, CH3=complement */
-    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, d);
-    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, d_comp);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, cnt);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, period);
   } else {
     /* Reverse: CH2=complement, CH3=D */
-    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, d_comp);
-    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, d);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, period);
+    __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, cnt);
   }
 }
