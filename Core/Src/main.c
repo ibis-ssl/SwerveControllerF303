@@ -122,7 +122,7 @@ int main(void)
   as5047p_t enc;
   uint8_t tx_data[8] = {0};
 
-  uint16_t buf[8];
+  uint16_t sen_buf[8];
 
   while (1) {
     /* USER CODE END WHILE */
@@ -135,9 +135,9 @@ int main(void)
     for (int i = 0; i < 8; i++) {
       photo_controller_cycle();
       HAL_Delay(1);
-      buf[i] = adc_raw[2];
+      sen_buf[i] = adc_raw[2];
     }
-    p("%3d %3d %3d %3d %3d %3d %3d %3d\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+    p("%3d %3d %3d %3d %3d %3d %3d %3d\n", sen_buf[0], sen_buf[1], sen_buf[2], sen_buf[3], sen_buf[4], sen_buf[5], sen_buf[6], sen_buf[7]);
     as5047p_update(&enc);
   }
   /* USER CODE END 3 */
