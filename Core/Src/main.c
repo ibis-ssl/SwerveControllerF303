@@ -122,15 +122,22 @@ int main(void)
   as5047p_t enc;
   uint8_t tx_data[8] = {0};
 
+  uint16_t buf[8];
+
   while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
     can_fifo_send(0x100, tx_data, 8);
     can_fifo_send(0x101, tx_data, 8);
-    p("%5dmV %5dmA %5d ENC %+6d\n", (int)(adc_raw[0] / 1.14), adc_raw[1], adc_raw[2], enc.enc_raw);
-    HAL_Delay(100);
-    photo_controller_cycle();
+    //p("%5dmV %5dmA %5d ENC %+6d\n", (int)(adc_raw[0] / 1.14), adc_raw[1], adc_raw[2], enc.enc_raw);
+    //HAL_Delay(100);
+    for (int i = 0; i < 8; i++) {
+      photo_controller_cycle();
+      HAL_Delay(1);
+      buf[i] = adc_raw[2];
+    }
+    p("%3d %3d %3d %3d %3d %3d %3d %3d\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
     as5047p_update(&enc);
   }
   /* USER CODE END 3 */
