@@ -18,13 +18,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 #include "adc.h"
 #include "can.h"
 #include "dma.h"
+#include "gpio.h"
+#include "math.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -73,7 +75,6 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -124,17 +125,25 @@ int main(void)
   uint8_t tx_data[8] = {0};
 
   uint16_t sen_buf[8];
+  int pre_max_idx = 0;
+
+  float pre_motor_radian = 0, motor_radian_speed = 0;
+  float motor_target_radian = 0;
+  float motor_current_radian = 0;
+  float motor_target_rad_per_tick = 0.001;
 
   while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    can_fifo_send(0x100, tx_data, 8);
-    can_fifo_send(0x101, tx_data, 8);
+    //can_fifo_send(0x100, tx_data, 8);
+    //can_fifo_send(0x101, tx_data, 8);
     //p("%5dmV %5dmA %5d ENC %+6d\n", (int)(adc_raw[0] / 1.14), adc_raw[1], adc_raw[2], enc.enc_raw);
     //HAL_Delay(100);
     int max_idx = 0, max_value = 0;
-    for (uint32_t i = 0; i < 8; i++) {
+
+    // photo abs encoder update
+    /*     for (uint32_t i = 0; i < 8; i++) {
       photo_controller_cycle();
       HAL_Delay(1);
       sen_buf[i] = adc_raw[2];
@@ -142,15 +151,37 @@ int main(void)
         max_value = sen_buf[i];
         max_idx = i;
       }
-    }
-    p("Sensor : %3d %3d %3d %3d %3d %3d %3d %3d , MAX : %d\n", sen_buf[0], sen_buf[1], sen_buf[2], sen_buf[3], sen_buf[4], sen_buf[5], sen_buf[6], sen_buf[7], max_idx);
+    } */
+
+    // motor encoder update
     as5047p_update(&enc);
 
-    if (max_idx > 4) {
-      motor_drive_set(0.3);
-    } else {
-      motor_drive_set(-0.3);
+    motor_radian_speed = enc.radian - pre_motor_radian;
+    if (motor_radian_speed > M_PI) {
+      motor_radian_speed -= 2 * M_PI;
+    } else if (motor_radian_speed < -M_PI) {
+      motor_radian_speed += 2 * M_PI;
     }
+    motor_current_radian += motor_radian_speed;
+    motor_target_radian += motor_target_rad_per_tick;
+    float diff = (motor_target_radian - motor_current_radian) / 2;
+
+    float OUT_DUTY_LIMIT = 0.3;
+    if (diff > OUT_DUTY_LIMIT) {
+      diff = OUT_DUTY_LIMIT;
+    } else if (diff < -OUT_DUTY_LIMIT) {
+      diff = -OUT_DUTY_LIMIT;
+    }
+    motor_drive_set(diff);
+
+    p("now %3d tar %3d diff %+4.3f\n", (int)(motor_current_radian * 180 / 3.14), (int)(motor_target_radian * 180 / 3.14), diff);
+    if (pre_max_idx == 5 && max_idx == 4) {
+      //p("%d %6ddeg\n", max_idx, (int)(enc.radian * 180 / 3.14));
+    }
+    //p("Sensor : %3d %3d %3d %3d %3d %3d %3d %3d , MAX : %d\n", sen_buf[0], sen_buf[1], sen_buf[2], sen_buf[3], sen_buf[4], sen_buf[5], sen_buf[6], sen_buf[7], max_idx);
+
+    pre_motor_radian = enc.radian;
+    pre_max_idx = max_idx;
   }
   /* USER CODE END 3 */
 }
@@ -175,31 +206,26 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     Error_Handler();
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_TIM8
-                              |RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1 | RCC_PERIPHCLK_TIM8 | RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.Tim8ClockSelection = RCC_TIM8CLK_HCLK;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
     Error_Handler();
   }
 }
@@ -223,7 +249,7 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
@@ -231,7 +257,7 @@ void Error_Handler(void)
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(uint8_t *file, uint32_t line)
+void assert_failed(uint8_t * file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,

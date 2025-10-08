@@ -28,7 +28,7 @@ void as5047p_update(as5047p_t * enc)
   // 分解能は14bitだが、後段であまり算をするため、16bitに変換
   enc->enc_raw = (hspi1.Instance->DR & 0x3FFF) << 2;
 
-  enc->radian = (float)enc->enc_raw / HARF_OF_ENC_CNT_MAX * 2 * M_PI;
+  enc->radian = (float)enc->enc_raw / HARF_OF_ENC_CNT_MAX * M_PI;
 
   HAL_GPIO_WritePin(ENC_0_GPIO_Port, ENC_0_Pin, GPIO_PIN_SET);
 }
