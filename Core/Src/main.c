@@ -23,13 +23,14 @@
 #include "can.h"
 #include "dma.h"
 #include "gpio.h"
-#include "math.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <math.h>
+
 #include "as5047p.h"
 #include "can_fifo.h"
 #include "debug_print.h"
@@ -66,7 +67,77 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+struct
+{
+  float kd, kp, ki;
+  float ki_limit;
+} pid = {.kd = 0.0, .kp = 0.1, .ki = 0.0};
+struct
+{
+  float intg, duty;
+} out_limit = {.intg = 0.1, .duty = 0.0};
+struct
+{
+  float cur_rad, pre_rad_raw;
+  float rad_per_sec;
+} motor = {0};
+struct
+{
+  float rad_per_sec;
+  float rad;
+} target = {0};
+struct
+{
+  float pos, div, intg;
+  float intg_limit;
+} diff = {0};
+float out_duty = 0;
 
+as5047p_t enc;
+
+static const int CYCLE_PER_SEC = 1000;
+static void motor_control_cycle()
+{
+  as5047p_update(&enc);
+  float rad_per_tick = 0;
+  rad_per_tick = enc.radian - motor.pre_rad_raw;
+  // 0またいだ場合の処理
+  if (rad_per_tick > M_PI) {
+    rad_per_tick -= 2 * M_PI;
+  } else if (rad_per_tick < -M_PI) {
+    rad_per_tick += 2 * M_PI;
+  }
+
+  // 現在値の更新
+  motor.cur_rad += rad_per_tick;
+  target.rad += target.rad_per_sec / CYCLE_PER_SEC;
+
+  // diff errorの更新
+  diff.pos = target.rad - motor.cur_rad;
+  diff.div = rad_per_tick * CYCLE_PER_SEC;
+  diff.intg += diff.pos;
+
+  // intg制限
+  if (diff.intg > out_limit.intg) {
+    diff.intg = out_limit.intg;
+  } else if (diff.intg < -out_limit.intg) {
+    diff.intg = -out_limit.intg;
+  }
+
+  // 出力と計算
+  out_duty = diff.pos * pid.kp + diff.div * pid.kd + diff.intg * pid.ki;
+  if (out_duty > out_limit.duty) {
+    out_duty = out_limit.duty;
+  } else if (out_duty < -out_limit.duty) {
+    out_duty = -out_limit.duty;
+  }
+
+  motor_drive_set(out_duty);
+
+  motor.pre_rad_raw = enc.radian;
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim) { motor_control_cycle(); }
 /* USER CODE END 0 */
 
 /**
@@ -103,9 +174,12 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM8_Init();
   MX_SPI1_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   __HAL_SPI_ENABLE(&hspi1);
+
+  HAL_TIM_Base_Start_IT(&htim7);
 
   debug_print_init();
   motor_drive_init();
@@ -121,68 +195,13 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  as5047p_t enc;
-  uint8_t tx_data[8] = {0};
-
-  uint16_t sen_buf[8];
-  int pre_max_idx = 0;
-
-  float pre_motor_radian = 0, motor_radian_speed = 0;
-  float motor_target_radian = 0;
-  float motor_current_radian = 0;
-  float motor_target_rad_per_tick = 0.001;
-
+  out_limit.duty = 0.3;
+  target.rad_per_sec = 1;
   while (1) {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-    //can_fifo_send(0x100, tx_data, 8);
-    //can_fifo_send(0x101, tx_data, 8);
-    //p("%5dmV %5dmA %5d ENC %+6d\n", (int)(adc_raw[0] / 1.14), adc_raw[1], adc_raw[2], enc.enc_raw);
-    //HAL_Delay(100);
-    int max_idx = 0, max_value = 0;
-
-    // photo abs encoder update
-    /*     for (uint32_t i = 0; i < 8; i++) {
-      photo_controller_cycle();
-      HAL_Delay(1);
-      sen_buf[i] = adc_raw[2];
-      if (max_value < sen_buf[i]) {
-        max_value = sen_buf[i];
-        max_idx = i;
-      }
-    } */
-
-    // motor encoder update
-    as5047p_update(&enc);
-
-    motor_radian_speed = enc.radian - pre_motor_radian;
-    if (motor_radian_speed > M_PI) {
-      motor_radian_speed -= 2 * M_PI;
-    } else if (motor_radian_speed < -M_PI) {
-      motor_radian_speed += 2 * M_PI;
-    }
-    motor_current_radian += motor_radian_speed;
-    motor_target_radian += motor_target_rad_per_tick;
-    float diff = (motor_target_radian - motor_current_radian) / 2;
-
-    float OUT_DUTY_LIMIT = 0.3;
-    if (diff > OUT_DUTY_LIMIT) {
-      diff = OUT_DUTY_LIMIT;
-    } else if (diff < -OUT_DUTY_LIMIT) {
-      diff = -OUT_DUTY_LIMIT;
-    }
-    motor_drive_set(diff);
-
-    p("now %3d tar %3d diff %+4.3f\n", (int)(motor_current_radian * 180 / 3.14), (int)(motor_target_radian * 180 / 3.14), diff);
-    if (pre_max_idx == 5 && max_idx == 4) {
-      //p("%d %6ddeg\n", max_idx, (int)(enc.radian * 180 / 3.14));
-    }
-    //p("Sensor : %3d %3d %3d %3d %3d %3d %3d %3d , MAX : %d\n", sen_buf[0], sen_buf[1], sen_buf[2], sen_buf[3], sen_buf[4], sen_buf[5], sen_buf[6], sen_buf[7], max_idx);
-
-    pre_motor_radian = enc.radian;
-    pre_max_idx = max_idx;
+    HAL_Delay(1000);
+    p("Out %4.2f Tar %4.2f Mtr %4.2f\n", out_duty, target.rad, motor.cur_rad);
   }
+
   /* USER CODE END 3 */
 }
 
