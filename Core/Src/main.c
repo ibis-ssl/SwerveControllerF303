@@ -129,6 +129,14 @@ static void uart_adjust_pid_from_rx(void)
         pid.kd -= step_kd;
         changed = true;
         break;
+      case 'r':
+        target.rad += M_PI * 2 * 2.25;
+        changed = true;
+        break;
+      case 'f':
+        target.rad -= M_PI * 2 * 2.25;
+        changed = true;
+        break;
       default:
         break;
     }
@@ -157,6 +165,26 @@ static void motor_control_cycle()
   diff.pos = target.rad - motor.cur_rad;
   diff.div = rad_per_tick * CYCLE_PER_SEC;
   diff.intg += diff.pos;
+
+  // pos
+  float DEAD_ZONE = 0.02;
+  if (diff.pos > DEAD_ZONE) {
+    diff.pos -= DEAD_ZONE;
+  } else if (diff.pos < -DEAD_ZONE) {
+    diff.pos += DEAD_ZONE;
+  } else if (fabs(diff.pos) < DEAD_ZONE) {
+    diff.pos = 0;
+  }
+
+  // div
+  /*   float IGNORE_SPEED = 1.0;
+  if (diff.div > IGNORE_SPEED) {
+    diff.div -= IGNORE_SPEED;
+  } else if (diff.div < -IGNORE_SPEED) {
+    diff.div += IGNORE_SPEED;
+  } else if (fabs(diff.div) < IGNORE_SPEED) {
+    diff.div = 0;
+  } */
 
   // intg制限
   if (diff.intg > out_limit.intg) {
