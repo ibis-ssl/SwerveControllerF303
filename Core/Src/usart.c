@@ -21,6 +21,49 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
+/* UART1 受信割り込み用のシンプルなリングバッファ実装 */
+#ifndef UART_RX_BUF_SIZE
+#define UART_RX_BUF_SIZE 256U
+#endif
+
+static uint8_t rx_ring[UART_RX_BUF_SIZE];
+static volatile uint16_t rx_head = 0U; /* 書き込み位置（割り込み側で進む） */
+static volatile uint16_t rx_tail = 0U; /* 読み出し位置（メイン側で進む） */
+static uint8_t rx_byte;                /* 1バイト受信バッファ */
+
+static inline uint16_t rb_inc(uint16_t i)
+{
+  i++;
+  if (i >= UART_RX_BUF_SIZE) {
+    i = 0U;
+  }
+  return i;
+}
+
+/* 外部公開API（宣言は usart.h の USER CODE に記載） */
+int uart_rx_available(void)
+{
+  uint16_t head = rx_head;
+  uint16_t tail = rx_tail;
+  if (head >= tail) {
+    return (int)(head - tail);
+  } else {
+    return (int)(UART_RX_BUF_SIZE - (tail - head));
+  }
+}
+
+int uart_rx_get_byte(uint8_t * out)
+{
+  if (out == NULL) {
+    return 0;
+  }
+  if (rx_tail == rx_head) {
+    return 0; /* 空 */
+  }
+  *out = rx_ring[rx_tail];
+  rx_tail = rb_inc(rx_tail);
+  return 1;
+}
 
 /* USER CODE END 0 */
 
@@ -54,7 +97,8 @@ void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-
+  /* 受信割り込みをスタート（1バイト単位） */
+  (void)HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
   /* USER CODE END USART1_Init 2 */
 
 }
@@ -138,5 +182,28 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 }
 
 /* USER CODE BEGIN 1 */
+/* 受信完了コールバック：リングバッファへ格納し、次の受信を開始 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huart)
+{
+  if (huart != &huart1) {
+    return;
+  }
+
+  uint16_t next = rb_inc(rx_head);
+  if (next != rx_tail) {
+    /* バッファに空きがある場合のみ格納（満杯時は捨てる） */
+    rx_ring[rx_head] = rx_byte;
+    rx_head = next;
+  }
+
+  /* 次の1バイト受信を再開 */
+  (void)HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+}
+
+/* エラー時など外部から受信を再開したい場合に呼ぶ */
+void uart_rx_restart(void)
+{
+  (void)HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+}
 
 /* USER CODE END 1 */

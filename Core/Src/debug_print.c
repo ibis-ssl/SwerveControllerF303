@@ -174,4 +174,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef * huart)
     start_dma_locked();
   }
   dp_critical_exit(pm);
+
+  /* 受信側もエラー後に再開しておく */
+  uart_rx_restart();
 }

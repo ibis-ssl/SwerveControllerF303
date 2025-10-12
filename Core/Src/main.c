@@ -71,7 +71,7 @@ struct
 {
   float kd, kp, ki;
   float ki_limit;
-} pid = {.kd = 0.0, .kp = 0.1, .ki = 0.0};
+} pid = {.kp = 5.0, .ki = 1.0, .kd = -0.03};
 struct
 {
   float intg, duty;
@@ -94,8 +94,49 @@ struct
 float out_duty = 0;
 
 as5047p_t enc;
-
 static const int CYCLE_PER_SEC = 1000;
+static void uart_adjust_pid_from_rx(void)
+{
+  /* q/a: Kp +/- , w/s: Ki +/- , e/d: Kd +/- */
+  const float step_kp = 0.1f;
+  const float step_ki = 0.01f;
+  const float step_kd = 0.01f;
+  uint8_t ch;
+  bool changed = false;
+  while (uart_rx_get_byte(&ch)) {
+    switch (ch) {
+      case 'q':
+        pid.kp += step_kp;
+        changed = true;
+        break;
+      case 'a':
+        pid.kp -= step_kp;
+        changed = true;
+        break;
+      case 'w':
+        pid.ki += step_ki;
+        changed = true;
+        break;
+      case 's':
+        pid.ki -= step_ki;
+        changed = true;
+        break;
+      case 'e':
+        pid.kd += step_kd;
+        changed = true;
+        break;
+      case 'd':
+        pid.kd -= step_kd;
+        changed = true;
+        break;
+      default:
+        break;
+    }
+  }
+  if (changed) {
+    p("PID kp=%.4f ki=%.4f kd=%.4f\n", pid.kp, pid.ki, pid.kd);
+  }
+}
 static void motor_control_cycle()
 {
   as5047p_update(&enc);
@@ -195,11 +236,13 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  out_limit.duty = 0.3;
-  target.rad_per_sec = 1;
+  out_limit.duty = 1.0;
+  out_limit.intg = 0.1;
+  target.rad_per_sec = 0;
   while (1) {
-    HAL_Delay(1000);
-    p("Out %4.2f Tar %4.2f Mtr %4.2f\n", out_duty, target.rad, motor.cur_rad);
+    uart_adjust_pid_from_rx();
+    HAL_Delay(100);
+    p("Out %+4.2f Tar %+4.2f Mtr %+4.2f cnt %3d\n", out_duty, target.rad, motor.cur_rad);
   }
 
   /* USER CODE END 3 */
