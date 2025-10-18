@@ -145,9 +145,11 @@ static void uart_adjust_pid_from_rx(void)
     p("PID kp=%.4f ki=%.4f kd=%.4f\n", pid.kp, pid.ki, pid.kd);
   }
 }
+
 static void motor_control_cycle()
 {
   as5047p_update(&enc);
+
   float rad_per_tick = 0;
   rad_per_tick = enc.radian - motor.pre_rad_raw;
   // 0またいだ場合の処理
@@ -166,7 +168,7 @@ static void motor_control_cycle()
   diff.div = rad_per_tick * CYCLE_PER_SEC;
   diff.intg += diff.pos;
 
-  // pos
+  // posだけdead zone追加
   float DEAD_ZONE = 0.02;
   if (diff.pos > DEAD_ZONE) {
     diff.pos -= DEAD_ZONE;
@@ -270,7 +272,7 @@ int main(void)
   while (1) {
     uart_adjust_pid_from_rx();
     HAL_Delay(100);
-    p("Out %+4.2f Tar %+4.2f Mtr %+4.2f cnt %3d\n", out_duty, target.rad, motor.cur_rad);
+    p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f cnt %3d\n", adc_raw[0],adc_raw[1],adc_raw[2],out_duty, target.rad, motor.cur_rad);
   }
 
   /* USER CODE END 3 */
