@@ -13,4 +13,14 @@ int p(const char * fmt, ...);
 /* Optional: print raw bytes (appends no terminator). */
 int debug_print_bytes(const uint8_t * data, uint16_t len);
 
+void setTextRed();
+void setTextYellow();
+void setTextGreen();
+void setTextMagenta();
+void setTextCyan()
+;
+void setTextNormal()
+;
+void setTextBold()
+;
 #endif /* DEBUG_PRINT_H */

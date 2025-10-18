@@ -39,6 +39,7 @@
 #include "photo_control.h"
 #include "config_mode.h"
 #include "app_settings.h"
+#include "error_monitor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,108 +71,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static app_settings_t g_settings;
-
-static void config_window_board_id(void)
-{
-  const uint32_t window_ms = 2000U;
-  const uint32_t max_interval_ms = 2000U;
-  const int required_newlines = 5;
-  uint32_t start = HAL_GetTick();
-  int nl_count = 0;
-  uint32_t last_nl_time = start;
-
-  p("[CFG] Press ENTER %d times within %lu ms to enter config.\n",
-    required_newlines, (unsigned long)window_ms);
-
-  while ((HAL_GetTick() - start) < window_ms) {
-    uint8_t ch;
-    if (!uart_rx_get_byte(&ch)) {
-      continue;
-    }
-    if (ch == '\r' || ch == '\n') {
-      uint32_t now = HAL_GetTick();
-      if ((now - last_nl_time) > max_interval_ms) {
-        nl_count = 0;
-      }
-      last_nl_time = now;
-      nl_count++;
-      if (nl_count >= required_newlines) {
-        /* 設定モーチE*/
-        p("\n[CFG] Enter CONFIG MODE. Current board_id=%lu\n",
-          (unsigned long)g_settings.board_id);
-        p("[CFG] Input board_id (0-3) then ENTER: ");
-
-        /* 入力征E��ループ（空Enterは無視！E*/
-        uint32_t wait_start = HAL_GetTick();
-        char line[16];
-        int len = 0;
-        while (1) {
-          uint8_t c2;
-          if (uart_rx_get_byte(&c2)) {
-            if (c2 == '\r' || c2 == '\n') {
-              line[len] = '\0';
-              /* 空行（空白のみ含む�E�なら無視して再度プロンプト */
-              int has_digit = 0;
-              for (int i = 0; i < len; i++) {
-                if (line[i] >= '0' && line[i] <= '9') { has_digit = 1; break; }
-                if (line[i] != ' ' && line[i] != '\t') { has_digit = -1; break; }
-              }
-              if (has_digit == 0) {
-                p("\r[CFG] Input board_id (0-3) then ENTER: ");
-                len = 0;
-                continue;
-              }
-
-              /* 数値匁E*/
-              int bid = -1;
-              for (int i = 0; i < len; i++) {
-                if (line[i] >= '0' && line[i] <= '9') {
-                  if (bid < 0) bid = 0;
-                  bid = bid * 10 + (line[i] - '0');
-                } else if (line[i] == ' ' || line[i] == '\t') {
-                  continue;
-                } else {
-                  bid = -1; break;
-                }
-              }
-
-              if (bid < 0 || bid > 3) {
-                p("\r[CFG] Invalid. Input 0-3 then ENTER: ");
-                len = 0;
-                continue;
-              }
-
-              /* 保孁E*/
-              g_settings.board_id = (uint32_t)bid;
-              HAL_StatusTypeDef st = app_settings_save(&g_settings);
-              if (st != HAL_OK) {
-                uint32_t err = HAL_FLASH_GetError();
-                p("\n[CFG] Save failed. st=%ld err=0x%08lX\n",
-                  (long)st, (unsigned long)err);
-                return;
-              }
-              p("\n[CFG] Saved board_id=%ld. Rebooting...\n", (long)bid);
-              HAL_Delay(100);
-              NVIC_SystemReset();
-            } else {
-              if (len < (int)(sizeof(line) - 1)) {
-                line[len++] = (char)c2;
-              }
-            }
-          }
-          if ((HAL_GetTick() - wait_start) > 15000U) {
-            p("\n[CFG] Timeout. Abort.\n");
-            return;
-          }
-        }
-      }
-    } else {
-      /* 他�Eキーで連続改行カウント�EリセチE�� */
-      nl_count = 0;
-    }
-  }
-}
 
 struct
 {
@@ -301,6 +200,14 @@ static void motor_control_cycle()
     diff.intg = -out_limit.intg;
   }
 
+  // エラーラッチ中は強制0出力
+  if (error_monitor_is_latched()) {
+    out_duty = 0.0f;
+    motor_drive_set(0.0f);
+    motor.pre_rad_raw = enc.radian;
+    return;
+  }
+
   // 出力と計算
   out_duty = diff.pos * pid.kp + diff.div * pid.kd + diff.intg * pid.ki;
   if (out_duty > out_limit.duty) {
@@ -361,6 +268,7 @@ int main(void)
   debug_print_init();
   motor_drive_init();
   can_fifo_init();
+  error_monitor_init();
 
   p("\n\nibis SwerveDrive Controller\n\n");
   config_mode_init();
@@ -379,7 +287,20 @@ int main(void)
   target.rad_per_sec = 0;
   while (1) {
     uart_adjust_pid_from_rx();
+    /* エラーモニタ更新（100ms周期）*/
+    float current_a = ((float)adc_raw[1]) * (2.0f / 4095.0f);
+    float steering_rad = motor.cur_rad / 2.25f;
+    error_monitor_update(current_a, steering_rad);
+    static uint32_t prev_err = 0;
+    if (error_monitor_is_latched() && prev_err == 0) {
+      prev_err = error_monitor_reason();
+      setTextRed();
+       setTextBold();
+      p("[ERR] latched reason=0x%08lX I=%.2fA ang=%.2frad\n", (unsigned long)prev_err, current_a, steering_rad);
+     setTextNormal();
+    }
     HAL_Delay(100);
+    
     p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f \n", adc_raw[0],adc_raw[1],adc_raw[2],out_duty, target.rad, motor.cur_rad);
   }
 

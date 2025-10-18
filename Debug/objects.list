@@ -6,6 +6,7 @@
 "./Core/Src/config_mode.o"
 "./Core/Src/debug_print.o"
 "./Core/Src/dma.o"
+"./Core/Src/error_monitor.o"
 "./Core/Src/gpio.o"
 "./Core/Src/main.o"
 "./Core/Src/motor_drive.o"
