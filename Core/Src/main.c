@@ -380,7 +380,7 @@ int main(void)
   while (1) {
     uart_adjust_pid_from_rx();
     HAL_Delay(100);
-    p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f cnt %3d\n", adc_raw[0],adc_raw[1],adc_raw[2],out_duty, target.rad, motor.cur_rad);
+    p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f \n", adc_raw[0],adc_raw[1],adc_raw[2],out_duty, target.rad, motor.cur_rad);
   }
 
   /* USER CODE END 3 */
