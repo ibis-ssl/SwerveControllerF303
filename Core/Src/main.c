@@ -32,14 +32,14 @@
 #include <math.h>
 #include <stdbool.h>
 
+#include "app_settings.h"
 #include "as5047p.h"
 #include "can_fifo.h"
+#include "config_mode.h"
 #include "debug_print.h"
+#include "error_monitor.h"
 #include "motor_drive.h"
 #include "photo_control.h"
-#include "config_mode.h"
-#include "app_settings.h"
-#include "error_monitor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -295,13 +295,13 @@ int main(void)
     if (error_monitor_is_latched() && prev_err == 0) {
       prev_err = error_monitor_reason();
       setTextRed();
-       setTextBold();
+      setTextBold();
       p("[ERR] latched reason=0x%08lX I=%.2fA ang=%.2frad\n", (unsigned long)prev_err, current_a, steering_rad);
-     setTextNormal();
+      setTextNormal();
     }
     HAL_Delay(100);
-    
-    p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f \n", adc_raw[0],adc_raw[1],adc_raw[2],out_duty, target.rad, motor.cur_rad);
+
+    p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f \n", adc_raw[0], adc_raw[1], adc_raw[2], out_duty, target.rad, motor.cur_rad);
   }
 
   /* USER CODE END 3 */

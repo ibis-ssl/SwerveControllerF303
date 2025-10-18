@@ -1,8 +1,9 @@
 #include "error_monitor.h"
+
 #include "stm32f3xx_hal.h"
 
 #ifndef STEER_GEAR_RATIO
-#define STEER_GEAR_RATIO  (2.25f)
+#define STEER_GEAR_RATIO (2.25f)
 #endif
 
 #ifndef ANGLE_LIMIT_TURNS
@@ -10,16 +11,16 @@
 #endif
 
 #ifndef OVERCURR_T1_A
-#define OVERCURR_T1_A     (1.0f)
+#define OVERCURR_T1_A (1.0f)
 #endif
 #ifndef OVERCURR_T1_MS
-#define OVERCURR_T1_MS    (3000u)
+#define OVERCURR_T1_MS (3000u)
 #endif
 #ifndef OVERCURR_T2_A
-#define OVERCURR_T2_A     (2.0f)
+#define OVERCURR_T2_A (2.0f)
 #endif
 #ifndef OVERCURR_T2_MS
-#define OVERCURR_T2_MS    (1000u)
+#define OVERCURR_T2_MS (1000u)
 #endif
 
 static volatile uint32_t g_reason = 0;
@@ -74,13 +75,6 @@ void error_monitor_update(float current_a, float steering_rad)
   check_angle(steering_rad);
 }
 
-bool error_monitor_is_latched(void)
-{
-  return g_reason != 0;
-}
+bool error_monitor_is_latched(void) { return g_reason != 0; }
 
-uint32_t error_monitor_reason(void)
-{
-  return g_reason;
-}
-
+uint32_t error_monitor_reason(void) { return g_reason; }

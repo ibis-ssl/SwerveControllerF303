@@ -2,8 +2,8 @@
 
 #include "app_settings.h"
 #include "debug_print.h"
-#include "usart.h"
 #include "stm32f3xx_hal.h"
+#include "usart.h"
 
 static app_settings_t g_settings;
 
@@ -13,17 +13,10 @@ void config_mode_init(void)
   p("[CFG] Loaded board_id=%lu\n", (unsigned long)g_settings.board_id);
 }
 
-uint32_t config_mode_get_board_id(void)
-{
-  return g_settings.board_id;
-}
+uint32_t config_mode_get_board_id(void) { return g_settings.board_id; }
 
 /* --- internal helpers ---------------------------------------------------- */
-static void print_enter_hint(uint32_t window_ms, int required_newlines)
-{
-  p("[CFG] Press ENTER %d times within %lu ms to enter config.\n",
-    required_newlines, (unsigned long)window_ms);
-}
+static void print_enter_hint(uint32_t window_ms, int required_newlines) { p("[CFG] Press ENTER %d times within %lu ms to enter config.\n", required_newlines, (unsigned long)window_ms); }
 
 static int wait_enter_trigger(uint32_t window_ms, uint32_t max_interval_ms, int required_newlines)
 {
@@ -61,7 +54,7 @@ static void prompt_board_id(int carriage_return)
   }
 }
 
-static int read_line_blocking(char *line, int max_len, uint32_t timeout_ms)
+static int read_line_blocking(char * line, int max_len, uint32_t timeout_ms)
 {
   uint32_t start = HAL_GetTick();
   int len = 0;
@@ -81,7 +74,7 @@ static int read_line_blocking(char *line, int max_len, uint32_t timeout_ms)
 }
 
 /* returns -2(blank), -1(invalid), 0..3(valid id) */
-static int parse_board_id_line(const char *line, int len)
+static int parse_board_id_line(const char * line, int len)
 {
   int seen_digit = 0;
   int val = -1;
@@ -130,8 +123,7 @@ void config_mode_run_window(void)
   }
 
   /* 設定モード */
-  p("\n[CFG] Enter CONFIG MODE. Current board_id=%lu\n",
-    (unsigned long)g_settings.board_id);
+  p("\n[CFG] Enter CONFIG MODE. Current board_id=%lu\n", (unsigned long)g_settings.board_id);
 
   char line[16];
   for (;;) {

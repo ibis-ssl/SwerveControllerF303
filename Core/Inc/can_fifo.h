@@ -13,6 +13,6 @@ void can_fifo_init(void);
  * std_id: 0..0x7FF, dlc: 0..8, data: pointer to payload (dlc bytes used)
  * Returns 0 on success/queued, <0 on drop (queue full).
  */
-int can_fifo_send(uint16_t std_id, const uint8_t *data, uint8_t dlc);
+int can_fifo_send(uint16_t std_id, const uint8_t * data, uint8_t dlc);
 
 #endif /* CAN_FIFO_H */

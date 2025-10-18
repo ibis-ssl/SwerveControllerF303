@@ -13,4 +13,3 @@ void config_mode_run_window(void);
 uint32_t config_mode_get_board_id(void);
 
 #endif /* CONFIG_MODE_H */
-

@@ -1,11 +1,13 @@
 #include "app_settings.h"
-#include "settings_storage.h"
+
 #include <string.h>
+
+#include "settings_storage.h"
 
 static void defaults(app_settings_t * s)
 {
   memset(s, 0xFF, sizeof(*s));
-  s->magic   = APP_SETTINGS_MAGIC;
+  s->magic = APP_SETTINGS_MAGIC;
   s->version = APP_SETTINGS_VER;
   s->board_id = 0u; /* 既定: 0 */
 }
@@ -32,4 +34,3 @@ HAL_StatusTypeDef app_settings_save(const app_settings_t * in)
   }
   return SettingsStorage_Write(0, in, sizeof(*in));
 }
-

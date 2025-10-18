@@ -179,34 +179,12 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef * huart)
   uart_rx_restart();
 }
 
-
-void setTextRed()
-{
-  p("\e[31m");
-}
-void setTextYellow()
-{
-  p("\e[33m");
-}
-void setTextGreen()
-{
-  p("\e[32m");
-}
+void setTextRed() { p("\e[31m"); }
+void setTextYellow() { p("\e[33m"); }
+void setTextGreen() { p("\e[32m"); }
 //void setTextBlue() { p("\e[34m"); } //見づらいので非推奨
-void setTextMagenta()
-{
-  p("\e[35m");
-}
-void setTextCyan()
-{
-  p("\e[36m");
-}
-void setTextNormal()
-{
-  p("\e[0m");
-}
+void setTextMagenta() { p("\e[35m"); }
+void setTextCyan() { p("\e[36m"); }
+void setTextNormal() { p("\e[0m"); }
 
-void setTextBold()
-{
-  p("\e[1m");
-}
+void setTextBold() { p("\e[1m"); }
