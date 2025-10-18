@@ -30,12 +30,14 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <math.h>
+#include <stdbool.h>
 
 #include "as5047p.h"
 #include "can_fifo.h"
 #include "debug_print.h"
 #include "motor_drive.h"
 #include "photo_control.h"
+#include "settings_storage.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,6 +69,49 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef struct {
+  uint32_t magic;
+  uint32_t boot_count;
+  uint32_t board_id;
+  float    zero_pos_rad;
+} settings_demo_t;
+
+#define SETTINGS_DEMO_MAGIC (0x31544753u) /* 'STG1' */
+
+static void settings_demo_run(void)
+{
+  settings_demo_t cur = {0};
+  SettingsStorage_Read(0, &cur, sizeof(cur));
+
+  bool need_init = (cur.magic != SETTINGS_DEMO_MAGIC);
+  if (need_init) {
+    cur.magic = SETTINGS_DEMO_MAGIC;
+    cur.boot_count = 0;
+    cur.board_id = 0;       /* 初期値 */
+    cur.zero_pos_rad = 0.0f;/* 初期値 */
+  }
+
+  cur.boot_count++;
+
+  /* 消去→書込み（領域全体を消去） */
+  if (SettingsStorage_EraseAll() != HAL_OK) {
+    p("[SETTINGS] Erase failed\n");
+    return;
+  }
+  if (SettingsStorage_Write(0, &cur, sizeof(cur)) != HAL_OK) {
+    p("[SETTINGS] Write failed\n");
+    return;
+  }
+
+  /* 検証読み出し */
+  settings_demo_t verify = {0};
+  SettingsStorage_Read(0, &verify, sizeof(verify));
+  p("[SETTINGS] magic=0x%08lX boot_count=%lu board_id=%lu zero=%.3f\n",
+    (unsigned long)verify.magic,
+    (unsigned long)verify.boot_count,
+    (unsigned long)verify.board_id,
+    verify.zero_pos_rad);
+}
 struct
 {
   float kd, kp, ki;
@@ -257,6 +302,9 @@ int main(void)
   can_fifo_init();
 
   p("\n\nibis SwerveDrive Controller\n\n");
+
+  /* 設定の保存/読み出し 動作確認 */
+  settings_demo_run();
 
   uint16_t adc_raw[3] = {0};
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adc_raw, 3);

@@ -209,14 +209,13 @@ SECTIONS
   /* Persistent settings area in reserved Flash pages */
   .settings (NOLOAD) :
   {
-    . = ALIGN(4);
+    /* Force section to cover entire SETTINGS memory whether or not input exists */
+    . = ORIGIN(SETTINGS);
     __settings_start__ = .;
-    KEEP(*(.settings))
-    KEEP(*(.settings*))
-    . = ALIGN(4);
+    . = ORIGIN(SETTINGS) + LENGTH(SETTINGS);
     __settings_end__ = .;
   } >SETTINGS
-  __settings_size__ = __settings_end__ - __settings_start__;
+  __settings_size__ = LENGTH(SETTINGS);
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }
