@@ -76,7 +76,7 @@ struct
 {
   float kd, kp, ki;
   float ki_limit;
-} pid = {.kp = 5.0, .ki = 1.0, .kd = -0.03};
+} pid = {.kp = 2.5, .ki = 0.5, .kd = -0.03};
 struct
 {
   float intg, duty;
@@ -135,12 +135,15 @@ static void uart_adjust_pid_from_rx(void)
         changed = true;
         break;
       case 'r':
-        target.rad += M_PI * 2 * 2.25;
+        target.rad += M_PI * 0.5 * 2.25;
         changed = true;
         break;
       case 'f':
-        target.rad -= M_PI * 2 * 2.25;
+        target.rad -= M_PI * 0.5 * 2.25;
         changed = true;
+        break;
+      case 'z':
+        out_limit.duty = 0.0;
         break;
       default:
         break;
@@ -263,19 +266,66 @@ int main(void)
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   __HAL_SPI_ENABLE(&hspi1);
 
-  HAL_TIM_Base_Start_IT(&htim7);
-
   debug_print_init();
   motor_drive_init();
   can_fifo_init();
   error_monitor_init();
 
+  setTextCyan();
   p("\n\nibis SwerveDrive Controller\n\n");
+  setTextNormal();
+
   config_mode_init();
   config_mode_run_window();
 
   uint16_t adc_raw[3] = {0};
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adc_raw, 3);
+
+  as5047p_update(&enc);
+  motor.pre_rad_raw = enc.radian;
+  // モーター制御サイクル開始
+  HAL_TIM_Base_Start_IT(&htim7);
+
+  out_limit.duty = 1.0;
+  out_limit.intg = 0.1;
+  target.rad_per_sec = -1.0;
+  // ステアリングフォトエンコーダは正回転で増加するが､モーターとは逆回転
+
+  uint16_t ph_idx[8] = {0};
+  int start_idx = -1, end_idx = 0;
+  bool calib_mode = true;
+  bool print_flag = false;
+  int pre_idx = 0;
+  while (calib_mode) {
+    int idx_max = 0, ph_max = 0;
+    for (int i = 0; i < 8; i++) {
+      photo_controller_cycle();
+      HAL_Delay(1);
+      ph_idx[i] = adc_raw[2];
+      if (ph_max < ph_idx[i]) {
+        ph_max = ph_idx[i];
+        idx_max = i;
+      }
+    }
+    if (start_idx < 0) {
+      start_idx = idx_max;
+      end_idx = (start_idx + 2) & 0x7;
+    }
+    //p("s %d %d idx :  %d\n", start_idx, end_idx, idx_max);
+
+    /*     if (pre_idx != idx_max && (pre_idx < idx_max || idx_max == 0)) {
+      p("Sw %d enc %d \n", idx_max, 360 * enc.enc_raw / 65535);
+      pre_idx = idx_max;
+    } */
+    if (end_idx == idx_max) {
+      calib_mode = false;
+    }
+  }
+  int swerve_offset = end_idx * 2.25 * 360 / 8;
+  int enc_angle = 360 * enc.enc_raw / 65535;
+  p("end %d enc zero = %d , %4d , %4d\n", end_idx, enc_angle, swerve_offset, swerve_offset + enc_angle);
+  // エンコーダはステアの2.25倍回転する
+  //
 
   /* USER CODE END 2 */
 
@@ -299,9 +349,20 @@ int main(void)
       p("[ERR] latched reason=0x%08lX I=%.2fA ang=%.2frad\n", (unsigned long)prev_err, current_a, steering_rad);
       setTextNormal();
     }
-    HAL_Delay(100);
+    HAL_Delay(10);
 
-    p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f \n", adc_raw[0], adc_raw[1], adc_raw[2], out_duty, target.rad, motor.cur_rad);
+    int idx_max = 0, ph_max = 0;
+    for (int i = 0; i < 8; i++) {
+      photo_controller_cycle();
+      HAL_Delay(1);
+      ph_idx[i] = adc_raw[2];
+      if (ph_max < ph_idx[i]) {
+        ph_max = ph_idx[i];
+        idx_max = i;
+      }
+    }
+    //p("ENC %6d deg / %d\n", 360 * enc.enc_raw / 65535, idx_max);
+    //p("%4d %4d %4d / Out %+4.2f Tar %+4.2f Mtr %+4.2f \n", adc_raw[0], adc_raw[1], adc_raw[2], out_duty, target.rad, motor.cur_rad);
   }
 
   /* USER CODE END 3 */
@@ -363,9 +424,11 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  setTextBold();
+  setTextRed();
+  p("!! ERROR !!");
   __disable_irq();
   while (1) {
-    p("");
   }
   /* USER CODE END Error_Handler_Debug */
 }
